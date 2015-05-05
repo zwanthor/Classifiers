@@ -1,12 +1,19 @@
 import scrapy
+from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
+from scrapy.contrib.spiders import CrawlSpider, Rule
 from goodreads.items import GrItem
- 
-class GrSpider(scrapy.Spider):
+
+# Good Reads quote spider 
+class GrSpider(CrawlSpider):
 	name = "gr"
 	allowed_domains = ["goodreads.com"]
 	start_urls = [
 		"https://www.goodreads.com/quotes/tag/love"
 	]
+	#recursively go through all pages with quotes
+	rules = (Rule (SgmlLinkExtractor(allow=('/quotes/tag/love?page',))
+	, callback="parse", follow= True),
+    	)
 
 	def parse(self, response):
 		item = GrItem() 
@@ -17,14 +24,3 @@ class GrSpider(scrapy.Spider):
 			item['quotes'].append(res)
 		item['link'] = response.xpath('//a[@class=\"next_page\"]/@href').extract()
 		yield item
-		"""
-		with open("gr_source", 'wb') as f:
-			f.write(response.body)	
-		
-		for res in repsonse.xpath("//div[@class=\"quoteText\"]/text()").extract():
-    			print res.encode("ascii", "replace")
-		"""
-
-
-		#item['quotes'].append(res.xpath('normalize-space(./text())').extract().encode("ascii", "replace")
-		#item['quotes'] = response.xpath("//div[@class=\"quoteText\"]/text()").extract()
